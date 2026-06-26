@@ -12,7 +12,7 @@ const Book = () => {
   useEffect(() => {
     const fetchBookData = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/api/book/${id}`);
+        const response = await fetch(`/api/book/${id}`);
         const data = await response.json();
         setBook(data);
       } catch (error) {

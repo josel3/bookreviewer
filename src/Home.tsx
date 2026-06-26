@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+	import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "./Header";
 
@@ -20,7 +20,7 @@ const Home = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      const fetchedData = await fetch("http://localhost:3001/api/home");
+      const fetchedData = await fetch("/api/home");
       const jsonData = await fetchedData.json();
       setData(jsonData);
     };

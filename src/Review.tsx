@@ -8,7 +8,7 @@ const Review = () => {
   const { id } = useParams();
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch(`http://localhost:3001/api/review/${id}`);
+      const response = await fetch(`/api/review/${id}`);
       const data = await response.json();
       setReview(data);
     };

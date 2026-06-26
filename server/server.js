@@ -61,7 +61,7 @@ app.get("/api/home", async (req, res) => {
     }
 });
 
-app.get("/", (req, res)=>{
+app.get("/api/reviews", (req, res)=>{
     db.all("select * from reviews", [], (err, rows)=>{
         if(err){
             console.error(err.message)
@@ -143,6 +143,10 @@ app.post('/api/notes', (req, res) => {
   const newNote = req.body;
   notes.push(newNote);
   res.status(201).json(newNote);
+});
+
+app.get('/', (req, res) => {
+    res.send("hello world");
 });
 
 process.on('SIGINT', () => {

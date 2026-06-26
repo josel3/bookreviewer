@@ -21,5 +21,8 @@ declare global {
       id: number;
       title: string;
       image: string | null;
+      year: number;
+      author: string;
+      reviews: Review[] | null;
     }
 }
