@@ -1,5 +1,5 @@
 const config = {
-    PORT: 3001,
+    PORT: 8080,
     DB_PATH: "./server/bookreviewer.db",
 }
 module.exports = config

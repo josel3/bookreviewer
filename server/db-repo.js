@@ -31,14 +31,19 @@ function runQuery(query, args = []) {
 
 function runCommand(query, args = []) {
   return new Promise((resolve, reject) => {
-    db_repo.connection.run(query, args, function(err) {
+    db_repo.connection.run(query, args, function (err) {
       if (err) {
-        console.error("Error en runCommand:", err.message, err.cause, err.stack);
+        console.error(
+          "Error en runCommand:",
+          err.message,
+          err.cause,
+          err.stack,
+        );
         return reject(err);
       }
       const lastID = this.lastID;
       const changes = this.changes;
-      return resolve({ lastID, changes }); 
+      return resolve({ lastID, changes });
     });
   });
 }
@@ -96,7 +101,7 @@ db_repo.getReviewById = async (id) => {
             from reviews r join books b on r.book=b.id join users u on u.id=r.user
             where r.id=?;
         `,
-      [id]
+      [id],
     );
     if (result.length == 0) throw new Error("Review not found!");
     return result[0];
@@ -118,7 +123,7 @@ db_repo.getUserById = async (id) => {
             select u.id, u.username, u.avatar, u.user_description as "userDescription" from users u
             where u.id = ?;
             `,
-        [id]
+        [id],
       ),
       runQuery(
         `
@@ -127,7 +132,7 @@ db_repo.getUserById = async (id) => {
             from reviews r join books b on r.book=b.id join users u on u.id=r.user
             where u.id=?;
             `,
-        [id]
+        [id],
       ),
     ]);
     console.log(usr);
@@ -147,17 +152,41 @@ db_repo.getUserById = async (id) => {
     throw new Error("error while fetching the data!");
   }
 };
+db_repo.getUserByNickName = async (name) => {
+  if (typeof name != "string") throw new Error("id must be a string!");
+  try {
+    const usr = await runQuery(
+      `
+            select u.id, u.username, u.avatar, u.user_description as "userDescription" from users u
+            where u.username = ?;
+            `,
+      [name],
+    );
+    console.log(usr);
+    if (usr.length == 0) throw new Error("no usr found!");
+    const result = usr[0];
+    return result;
+  } catch (err) {
+    if (
+      err.message === "no usr found!" ||
+      err.message === "id must be a string!"
+    )
+      throw err;
+    console.error(err.message);
+    throw new Error("error while fetching the data!");
+  }
+};
 
 db_repo.getBookById = async (id) => {
   try {
-  if (typeof id != "number") throw new Error("id must be a number!");
+    if (typeof id != "number") throw new Error("id must be a number!");
     const [book, bookRevs] = await Promise.all([
       runQuery(
         `
             select b.id, b.title, b.cover as "image", b.author, b.year
             from books b where b.id = ?;
             `,
-        [id]
+        [id],
       ),
       runQuery(
         `
@@ -166,7 +195,7 @@ db_repo.getBookById = async (id) => {
             from reviews r join books b on r.book=b.id join users u on u.id=r.user
             where b.id=?;
             `,
-        [id]
+        [id],
       ),
     ]);
     const result = {
@@ -185,32 +214,45 @@ db_repo.getBookById = async (id) => {
   }
 };
 
+db_repo.getBooks = async () => {
+  try {
+     const result = await runQuery(
+        `
+            select id, title from books;
+        `
+      )
+     return result;
+  } catch (err) {
+    throw err;
+  }
+}
+
 db_repo.createUser = async (name, pass) => {
   try {
     if (!name || !pass) throw new Error("Usuario o contraseña inválidos");
     const Pass = pass.toString();
     const Name = name.toString();
-    
+
     // Verificar si el usuario ya existe
     const repeated = await runQuery(
       `SELECT id FROM users WHERE username = ?;`,
-      [Name]
+      [Name],
     );
-    
+
     if (repeated.length > 0) {
       throw new Error("user already exists!");
     }
-    
+
     const hashedPass = await bcrypt.hash(Pass, 7);
     const result = await runCommand(
       `INSERT INTO users (username, password) VALUES (?, ?);`,
-      [Name, hashedPass]
+      [Name, hashedPass],
     );
-    
+
     if (!result || !result.lastID) {
       throw new Error("Error al crear el usuario");
     }
-    
+
     return result.lastID;
   } catch (err) {
     console.error("Error en createUser:", err);
@@ -218,6 +260,32 @@ db_repo.createUser = async (name, pass) => {
     throw new Error("Error al crear el usuario");
   }
 };
+
+db_repo.updateUser = async (id, data) => {
+
+  try {
+    const props = Object.entries(data).filter((prop)=>{
+      return prop[1] !== null && prop[1] !== undefined
+    })
+  
+    if(props.length === 0) throw new Error("no se encontraron propiedades validas que cambiar");
+
+    const set = props.map((prop)=>{
+      return `${prop[0]} = ?`
+    }).join(", ");
+
+    const query = props.map((prop)=>prop[1]);
+  
+    console.log("SET",set,"QUERY", query);
+
+    const result = await runCommand(
+        `UPDATE users SET ${set} where id = ?;`,
+        [...query, id],
+      );
+  } catch (error) {
+    throw error
+  }
+}
 
 db_repo.checkPassword = async (name, pass) => {
   try {
@@ -227,7 +295,7 @@ db_repo.checkPassword = async (name, pass) => {
 
     const users = await runQuery(
       `SELECT password FROM users WHERE username = ?;`,
-      [Name]
+      [Name],
     );
 
     if (!users || users.length === 0) {
@@ -255,18 +323,18 @@ db_repo.setToken = async (user, token, expiration) => {
     // Obtener el ID del usuario
     const userResult = await runQuery(
       `SELECT id FROM users WHERE username = ?;`,
-      [user]
+      [user],
     );
-    
+
     if (!userResult || userResult.length === 0) {
       throw new Error("Usuario no encontrado");
     }
-    
+
     const userId = userResult[0].id;
-    
+
     await runCommand(
       `INSERT INTO sessions (token, user, expiration) VALUES (?, ?, ?);`,
-      [token, userId, expiration]
+      [token, userId, expiration],
     );
     return true;
   } catch (err) {
@@ -283,13 +351,14 @@ db_repo.isTokenValid = async (token) => {
             select user as "userId", expiration, active from sessions
             where token = ?;
             `,
-      [token]
+      [token],
     );
     if (!session[0]) throw new Error("token not found!");
     const currentTime = new Date().toISOString();
     if (session[0].expiration < currentTime) throw new Error("token expired!");
     if (!session[0].active) throw new Error("token revoked!");
-    return session.userId;
+    return session[0].userId;
+
   } catch (err) {
     if (err.message === "token not found!" || err.message === "token expired!")
       throw err;
@@ -306,7 +375,7 @@ db_repo.clearToken = async (token) => {
             set active=0
             where token = ?
             `,
-      [token]
+      [token],
     );
   } catch (err) {
     throw new Error("error while clearing token!");
@@ -320,13 +389,14 @@ db_repo.postReview = async (userId, bookId, title, text) => {
   try {
     const user = await db_repo.getUserById(userId);
     if (user.length === 0) throw new Error("invalid user!");
-    await runCommand(
+    const result = await runCommand(
       `
           insert into reviews (user, book, title, text)
           values (?,?,?,?)
           `,
-      [userId, bookId, title, text]
+      [userId, bookId, title, text],
     );
+    return result;
   } catch (err) {
     if (err.message == "invalid user!") throw err;
     console.error(err.message);

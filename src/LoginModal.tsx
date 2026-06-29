@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import "./LoginModal.css";
+import { useUser } from "./UserContext"; // 1. Importamos el hook del contexto
+import { createPortal } from "react-dom";
 
 interface LoginModalProps {
     show: Function;
@@ -7,6 +9,7 @@ interface LoginModalProps {
 
 function LoginModal(props: LoginModalProps) {
     const show = props.show;
+    const { login } = useUser(); // 2. Extraemos la función login del contexto
     const [toggleForm, setToggleForm] = useState(true);
     const [error, setError] = useState("");
 
@@ -37,8 +40,14 @@ function LoginModal(props: LoginModalProps) {
             if (data.error) {
                 setError(data.error);
             } else {
-                show(false);
-                window.location.reload();
+                // 3. Populamos el contexto global con la data del usuario de la sesión
+                // (Asegurate de que 'data' contenga las propiedades como id, username, etc.)
+                login(data.user);
+                
+                show(false); // Cerramos el modal
+                
+                // Quitamos el window.location.reload() ya que el contexto 
+                // actualizará el Header y la app automáticamente.
             }
         } catch (err) {
             console.error("Error en login:", err);
@@ -73,24 +82,20 @@ function LoginModal(props: LoginModalProps) {
                 mode: "cors"
             });
             
-            console.log('Respuesta recibida:', response);
-            console.log('Status:', response.status);
-            console.log('Headers:', response.headers);
-            
             if (!response.ok) {
                 const data = await response.json();
-                console.error('Error en la respuesta:', data);
                 setError(data.error || "Error al registrar usuario");
                 return;
             }
             
             const data = await response.json();
-            console.log('Datos recibidos:', data);
             if (data.error) {
                 setError(data.error);
             } else {
+                login(data.user);
+                
                 show(false);
-                window.location.reload();
+                 
             }
         } catch (err) {
             console.error("Error detallado en registro:", err);
@@ -98,7 +103,7 @@ function LoginModal(props: LoginModalProps) {
         }
     };
 
-    return (
+    return createPortal(
         <div className="login-modal-container fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center" onClick={() => show(false)}>
             <div className="login-modal relative transition-all duration-300 ease-in-out transition-normal" onClick={(e) => e.stopPropagation()}>
                 <button className="close-btn bg-purple-900 text-white text-center align-top rounded-sm px-2 absolute top-2 right-2" onClick={() => show(false)}>X</button>
@@ -132,7 +137,8 @@ function LoginModal(props: LoginModalProps) {
                     {toggleForm ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
                 </button>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

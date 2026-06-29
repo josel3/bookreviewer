@@ -1,4 +1,4 @@
-	import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "./Header";
 
@@ -28,37 +28,10 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="bg-white shadow-lg rounded-lg min-h-[800px]">
+    <div className="bg-white shadow-lg rounded-lg">
       <Header/>
-      <main className="flex gap-4">
-        <section className="basis-2/3 space-y-6">
-          <div className="space-y-4 ml-4">
-            <h2 className="font-title ml-2 text-lg text-primary-950">Top Reviews</h2>
-            {data.reviews.map((review, index) => (
-              <Link to={`/review/${review.id}`} key={`review-${index}-${review.id}`}>
-                <div className="flex gap-4 mt-2">
-                  <img
-                    src={review.image || Placeholder}
-                    alt={review.bookTitle}
-                    className="w-[80px] h-[120px] bg-neutral-300 rounded-md object-cover"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-primary-950">
-                      {review.bookTitle}
-                    </h3>
-                    <h4 className="text-sm text-neutral-950">
-                      {review.reviewTitle}
-                    </h4>
-                    <p className="text-sm text-neutral-950 line-clamp-2">
-                      {review.reviewText}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-        <aside className="fixed right-0 flex flex-col basis-1/3 space-y-6 pr-12 flex-shrink-0 flex-grow">
+      <main className="flex flex-col w-full overflow-x-hidden md:flex-row gap-4">
+        <aside className="flex flex-row flex-shrink-0 flex-grow justify-between gap-4 pl-4 pr-6 md:fixed md:right-0 md:flex-col md:z-10">
           <div className="space-y-4">
             <h2 className="font-title ml-2 text-lg text-primary-950">Top Books</h2>
             {data.topBooks.map((book, index) => (
@@ -92,6 +65,33 @@ const Home = () => {
             ))}
           </div>
         </aside>
+        <section className="flex w-full md:w-2/3">
+          <div className="mr-4 ml-4 w-5/6 md:w-3/4">
+            <h2 className="font-title ml-2 text-lg text-primary-950">Top Reviews</h2>
+            {data.reviews.map((review, index) => (
+              <Link to={`/review/${review.id}`} key={`review-${index}-${review.id}`}>
+                <div className="flex gap-4 mt-2 overflow-x-hidden">
+                  <img
+                    src={review.image || Placeholder}
+                    alt={review.bookTitle}
+                    className="w-[80px] h-[120px] bg-neutral-300 rounded-md object-cover"
+                  />
+                  <div className="flex-1 w-lg">
+                    <h3 className="font-semibold text-primary-950">
+                      {review.bookTitle}
+                    </h3>
+                    <h4 className="text-sm text-neutral-950">
+                      {review.reviewTitle}
+                    </h4>
+                    <p className="text-sm text-neutral-950 line-clamp-2">
+                      {review.reviewText}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   );
